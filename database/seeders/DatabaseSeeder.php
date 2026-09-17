@@ -17,11 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $this->call([RoleSeeder::class, StandardSeeder::class]);
+
+        $user = User::factory()->create([
             'name' => 'Mihir Soni',
             'email' => 'mihir@webmavens.com',
         ]);
 
-        $this->call([RoleSeeder::class, StandardSeeder::class]);
+        $user->assignRole('student');
+
+        $user->studentProfile()->create([
+            'user_id' => $user->id,
+            'division_id' => 45,
+        ]);
     }
 }
