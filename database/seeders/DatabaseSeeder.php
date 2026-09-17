@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'mihir@webmavens.com',
         ]);
 
-        $user->assignRole('student');
+        $user->assignRole('super-admin');
 
         $user->studentProfile()->create([
             'user_id' => $user->id,
