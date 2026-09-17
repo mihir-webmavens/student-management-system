@@ -2,6 +2,8 @@
 
 namespace App\Concerns;
 
+use App\Models\Division;
+use App\Models\Standard;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -46,6 +48,23 @@ trait ProfileValidationRules
             $userId === null
                 ? Rule::unique(User::class)
                 : Rule::unique(User::class)->ignore($userId),
+        ];
+    }
+
+    /**
+     * Get the validation rules used to validate a student's standard and division.
+     *
+     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
+     */
+    protected function studentProfileRules(mixed $standardId): array
+    {
+        return [
+            'standard_id' => ['required', 'integer', Rule::exists(Standard::class, 'id')],
+            'division_id' => [
+                'required',
+                'integer',
+                Rule::exists(Division::class, 'id')->where('standard_id', $standardId),
+            ],
         ];
     }
 }

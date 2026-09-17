@@ -30,6 +30,33 @@
                 placeholder="email@example.com"
             />
 
+            <!-- Standard & Division -->
+            <div
+                x-data="{
+                    standards: @js($standards->map(fn ($standard) => ['id' => $standard->id, 'name' => $standard->name, 'divisions' => $standard->divisions->map->only('id', 'name')])),
+                    standardId: @js((string) old('standard_id', '')),
+                    divisionId: @js((string) old('division_id', '')),
+                    get divisions() {
+                        return this.standards.find((standard) => String(standard.id) === this.standardId)?.divisions ?? [];
+                    },
+                }"
+                class="grid grid-cols-2 gap-4"
+            >
+                <flux:select name="standard_id" :label="__('Standard')" x-model="standardId" x-on:change="divisionId = ''" required>
+                    <option value="">{{ __('Select standard') }}</option>
+                    @foreach ($standards as $standard)
+                        <option value="{{ $standard->id }}">{{ $standard->name }}</option>
+                    @endforeach
+                </flux:select>
+
+                <flux:select name="division_id" :label="__('Division')" x-model="divisionId" x-bind:disabled="! standardId" required>
+                    <option value="">{{ __('Select division') }}</option>
+                    <template x-for="division in divisions" :key="division.id">
+                        <option :value="division.id" x-text="division.name" :selected="String(division.id) === divisionId"></option>
+                    </template>
+                </flux:select>
+            </div>
+
             <!-- Password -->
             <flux:input
                 name="password"

@@ -22,6 +22,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'mihir@webmavens.com',
         ]);
 
-        $this->call(RoleSeeder::class);
+        $this->call([RoleSeeder::class, StandardSeeder::class]);
     }
 }
