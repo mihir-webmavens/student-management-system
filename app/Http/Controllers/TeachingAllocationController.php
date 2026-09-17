@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTeachingAllocationRequest;
 use App\Models\Standard;
+use App\Models\Subject;
 use App\Models\TeacherProfile;
 use App\Models\TeachingAllocation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
@@ -26,16 +29,38 @@ class TeachingAllocationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Display a listing of the teaching allocations.
+     * Display a listing of the teaching allocations, narrowed down by the filters in the query string.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $filters = [
+            'search' => $request->string('search')->trim()->value(),
+            'standard_id' => $request->integer('standard_id') ?: null,
+            'division_id' => $request->integer('division_id') ?: null,
+            'subject_id' => $request->integer('subject_id') ?: null,
+        ];
+
         $allocations = TeachingAllocation::query()
             ->with(['teacherProfile.user', 'division.standard', 'subject'])
+            ->when($filters['search'] !== '', fn (Builder $query) => $query->whereHas('teacherProfile', fn (Builder $teacherQuery) => $teacherQuery
+                ->where(fn (Builder $searchQuery) => $searchQuery
+                    ->where('employee_code', 'like', "%{$filters['search']}%")
+                    ->orWhereHas('user', fn (Builder $userQuery) => $userQuery
+                        ->where('name', 'like', "%{$filters['search']}%")
+                        ->orWhere('email', 'like', "%{$filters['search']}%")))))
+            ->when($filters['standard_id'], fn (Builder $query, int $standardId) => $query->whereRelation('division', 'standard_id', $standardId))
+            ->when($filters['division_id'], fn (Builder $query, int $divisionId) => $query->where('division_id', $divisionId))
+            ->when($filters['subject_id'], fn (Builder $query, int $subjectId) => $query->where('subject_id', $subjectId))
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('teaching-allocations.index', ['allocations' => $allocations]);
+        return view('teaching-allocations.index', [
+            'allocations' => $allocations,
+            'filters' => $filters,
+            'standards' => Standard::query()->with('divisions')->orderBy('sort_order')->get(),
+            'subjects' => Subject::query()->orderBy('name')->get(),
+        ]);
     }
 
     /**

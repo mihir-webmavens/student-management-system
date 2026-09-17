@@ -109,6 +109,41 @@ class TeachingAllocationTest extends TestCase
             ->assertSee($teacher->employee_code);
     }
 
+    public function test_admin_can_filter_allocations(): void
+    {
+        $this->seed(RoleSeeder::class);
+
+        $tenth = Standard::factory()->create(['name' => 'Standard 10']);
+        $ninth = Standard::factory()->create(['name' => 'Standard 9']);
+        $tenthA = Division::factory()->for($tenth)->create(['name' => 'A']);
+        $tenthB = Division::factory()->for($tenth)->create(['name' => 'B']);
+        $ninthA = Division::factory()->for($ninth)->create(['name' => 'A']);
+        $english = Subject::factory()->create(['name' => 'English']);
+        $science = Subject::factory()->create(['name' => 'Science']);
+
+        $asha = TeacherProfile::factory()->for(User::factory()->create(['name' => 'Asha Patel', 'email' => 'asha@example.com']))->create(['employee_code' => 'EMP-101']);
+        $ravi = TeacherProfile::factory()->for(User::factory()->create(['name' => 'Ravi Shah', 'email' => 'ravi@example.com']))->create(['employee_code' => 'EMP-202']);
+
+        TeachingAllocation::factory()->for($asha)->for($tenthA)->for($english)->create();
+        TeachingAllocation::factory()->for($asha)->for($tenthB)->for($science)->create();
+        TeachingAllocation::factory()->for($ravi)->for($ninthA)->for($english)->create();
+
+        $this->actingAs(User::factory()->create()->assignRole('admin'));
+
+        $this->assertFilterFinds(['search' => 'asha'], 2);
+        $this->assertFilterFinds(['search' => 'EMP-202'], 1);
+        $this->assertFilterFinds(['search' => 'ravi@example'], 1);
+        $this->assertFilterFinds(['standard_id' => $tenth->id], 2);
+        $this->assertFilterFinds(['standard_id' => $tenth->id, 'division_id' => $tenthB->id], 1);
+        $this->assertFilterFinds(['subject_id' => $english->id], 2);
+        $this->assertFilterFinds(['search' => 'asha', 'subject_id' => $english->id], 1);
+        $this->assertFilterFinds(['search' => 'nobody'], 0);
+        $this->assertFilterFinds(['standard_id' => 'not-a-number'], 3);
+
+        $this->get(route('teaching-allocations.index', ['search' => 'nobody']))
+            ->assertSee('No teaching allocations match these filters.');
+    }
+
     public function test_admin_can_allocate_a_subject_of_the_division_to_a_teacher(): void
     {
         $this->seed(RoleSeeder::class);
@@ -209,5 +244,19 @@ class TeachingAllocationTest extends TestCase
 
         $this->assertSame(13, TeacherProfile::query()->count());
         $this->assertSame(Division::query()->withCount('subjects')->get()->sum('subjects_count'), TeachingAllocation::query()->count());
+    }
+
+    /**
+     * Assert the allocations page returns the expected number of results for the given filters.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    private function assertFilterFinds(array $filters, int $expectedCount): void
+    {
+        $response = $this->get(route('teaching-allocations.index', $filters));
+
+        $response->assertOk();
+
+        $this->assertSame($expectedCount, $response->viewData('allocations')->total(), 'Filters: '.json_encode($filters));
     }
 }
