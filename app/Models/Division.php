@@ -39,4 +39,14 @@ class Division extends Model
     {
         return $this->hasMany(StudentProfile::class);
     }
+
+    /**
+     * Get the teacher and subject allocations of the division.
+     *
+     * @return HasMany<TeachingAllocation, $this>
+     */
+    public function teachingAllocations(): HasMany
+    {
+        return $this->hasMany(TeachingAllocation::class);
+    }
 }

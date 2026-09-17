@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $this->call([RoleSeeder::class, StandardSeeder::class]);
+        $this->call([RoleSeeder::class, StandardSeeder::class, SubjectSeeder::class]);
 
         $user = User::factory()->create([
             'name' => 'Mihir Soni',

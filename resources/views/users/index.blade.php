@@ -1,9 +1,23 @@
 <x-layouts::app :title="__('Users')">
     <div class="flex w-full flex-1 flex-col gap-6">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Users') }}</flux:heading>
-            <flux:subheading>{{ __('All users and their assigned roles.') }}</flux:subheading>
+        <div class="flex justify-between items-center gap-4 ">
+
+            <div>
+                <flux:heading size="xl" level="1">{{ __('Users') }}</flux:heading>
+                <flux:subheading>{{ __('All users and their assigned roles.') }}</flux:subheading>
+            </div>
+            @hasanyrole('super-admin|admin')
+                <div>
+                    <flux:button :href="route('users.create')" variant="primary" size="sm" icon="plus" wire:navigate>
+                        {{ __('Create User') }}
+                    </flux:button>
+                </div>
+            @endhasanyrole
         </div>
+
+        @if (session('status'))
+            <flux:callout variant="success" icon="check-circle" :heading="session('status')" />
+        @endif
 
         <flux:table :paginate="$users">
             <flux:table.columns>

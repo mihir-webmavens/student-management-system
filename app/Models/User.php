@@ -17,6 +17,7 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -60,6 +61,32 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail, Passkey
     public function studentProfile(): HasOne
     {
         return $this->hasOne(StudentProfile::class);
+    }
+
+    /**
+     * Get the teacher profile of the user.
+     *
+     * @return HasOne<TeacherProfile, $this>
+     */
+    public function teacherProfile(): HasOne
+    {
+        return $this->hasOne(TeacherProfile::class);
+    }
+
+    /**
+     * Get the role names this user is allowed to assign to other users.
+     *
+     * Only a super admin can create another super admin.
+     *
+     * @return array<int, string>
+     */
+    public function assignableRoleNames(): array
+    {
+        return Role::query()
+            ->when(! $this->hasRole('super-admin'), fn ($query) => $query->where('name', '!=', 'super-admin'))
+            ->orderBy('id')
+            ->pluck('name')
+            ->all();
     }
 
     /**
