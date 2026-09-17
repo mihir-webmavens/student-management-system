@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -48,5 +49,15 @@ class Division extends Model
     public function teachingAllocations(): HasMany
     {
         return $this->hasMany(TeachingAllocation::class);
+    }
+
+    /**
+     * Get the subjects taught in the division.
+     *
+     * @return BelongsToMany<Subject, $this>
+     */
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class)->withTimestamps();
     }
 }

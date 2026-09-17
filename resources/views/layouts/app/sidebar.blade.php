@@ -18,6 +18,14 @@
                     <flux:sidebar.item icon="user-group" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
                         {{ __('Users') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open" :href="route('subjects.index')" :current="request()->routeIs('subjects.*')" wire:navigate>
+                        {{ __('Subjects') }}
+                    </flux:sidebar.item>
+                    @hasanyrole('super-admin|admin')
+                        <flux:sidebar.item icon="academic-cap" :href="route('teaching-allocations.index')" :current="request()->routeIs('teaching-allocations.*')" wire:navigate>
+                            {{ __('Teaching Allocations') }}
+                        </flux:sidebar.item>
+                    @endhasanyrole
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
